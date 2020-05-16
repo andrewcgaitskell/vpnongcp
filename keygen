@@ -1,0 +1,9 @@
+ipsec pki --pub --in ~/pki/private/server-key.pem --type rsa \
+    | ipsec pki --issue --lifetime 1825 \
+        --cacert ~/pki/cacerts/ca-cert.pem \
+        --cakey ~/pki/private/ca-key.pem \
+        --dn "CN=server_domain_or_IP" --san "server_domain_or_IP" \
+        --flag serverAuth --flag ikeIntermediate --outform pem \
+    >  ~/pki/certs/server-cert.pem
+    
+    
