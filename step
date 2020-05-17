@@ -3,9 +3,12 @@ https://www.digitalocean.com/community/tutorials/how-to-set-up-an-ikev2-vpn-serv
 
 
 sudo apt update
+sudo apt upgrade
+
 sudo apt install strongswan strongswan-pki
 
 mkdir -p ~/pki/{cacerts,certs,private}
+
 chmod 700 ~/pki
 
 ipsec pki --gen --type rsa --size 4096 --outform pem > ~/pki/private/ca-key.pem
