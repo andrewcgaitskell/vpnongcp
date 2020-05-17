@@ -108,5 +108,7 @@ sudo ufw enable
 
 cat /etc/ipsec.d/cacerts/ca-cert.pem
 
+cat /var/log/syslog
+
 no private key found for '34.89.15.222'
 
