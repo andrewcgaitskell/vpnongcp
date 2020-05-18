@@ -1,6 +1,11 @@
-source
+source/beginning process
 https://www.digitalocean.com/community/tutorials/how-to-set-up-an-ikev2-vpn-server-with-strongswan-on-ubuntu-18-04-2
 
+create vm in gcp
+ubuntu 18.04 full lts
+make sure change all options to standard not premium
+network and external ip
+premium ones not free
 
 sudo apt update
 sudo apt upgrade
