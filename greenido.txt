@@ -11,6 +11,9 @@ https://gist.github.com/greenido/b9c11fdb7dd3b0d2093c
 # Thx to: https://github.com/sarfata/voodooprivacy/blob/master/voodoo-vpn.sh for the code/idea
 #
 
+https://cloud.google.com/vpn/docs/how-to/generating-pre-shared-key
+
+
 # TODO:
 IPSEC_PSK=YOUR-KEY
 VPN_USER=yourName
