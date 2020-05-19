@@ -1,0 +1,139 @@
+https://lengerrong.blogspot.com/2017/05/set-up-ikev2-vpn-on-your-google-compute.html
+
+
+Install strongswan:
+
+sudo apt-get install strongswan strongswan-plugin-eap-mschapv2 strongswan-plugin-xauth-generic
+
+errong_leng@freevpn:~$ ipsec version
+Linux strongSwan U5.3.5/K4.8.0-51-generic
+Institute for Internet Technologies and Applications
+University of Applied Sciences Rapperswil, Switzerland
+See 'ipsec --copyright' for copyright information.
+
+Build CA:
+ipsec pki --gen --outform pem > ca.key.pem
+ipsec pki --self --in ca.key.pem --dn "C=CN, O=lengerrong, CN=104.198.151.116" --ca --outform pem > ca.cert.pem
+ipsec pki --gen --outform pem > server.key.pem
+ipsec pki --pub --in server.key.pem | ipsec pki --issue --cacert ca.cert.pem  --cakey ca.key.pem --dn "C=CN, O=lengerrong, CN=104.198.151.116" --san="104.198.151.116" --flag serverAuth --flag ikeIntermediate --out
+form pem > server.cert.pem
+
+Install CA:
+sudo cp ca.cert.pem /etc/ipsec.d/cacerts/
+sudo cp server.cert.pem /etc/ipsec.d/certs/
+sudo cp server.key.pem /etc/ipsec.d/private/
+
+Config strongswan:
+
+errong_leng@freevpn:~$
+
+cat  /etc/strongswan.conf
+# strongswan.conf - strongSwan configuration file
+#
+# Refer to the strongswan.conf(5) manpage for details
+#
+# Configuration changes should be made in the included files
+
+charon {
+        load_modular = yes
+        plugins {
+                include strongswan.d/charon/*.conf
+        }
+}
+
+include strongswan.d/*.conf
+
+Config ipsec conf:
+
+
+errong_leng@freevpn:~$
+
+sudo cat /etc/ipsec.conf
+
+config setup
+    uniqueids=never # allow multiple connections per user
+    charondebug="ike 2, knl 2, cfg 2, net 2, esp 2, dmn 2,  mgr 2"
+
+conn %default
+    fragmentation=yes
+    rekey=no
+    dpdaction=clear
+    keyexchange=ikev2
+    compress=yes
+    dpddelay=35s
+
+    ike=aes128gcm16-prfsha512-ecp256,aes128-sha2_512-prfsha512-ecp256,aes128-sha2_384-prfsha384-ecp256!
+    esp=aes128gcm16-ecp256,aes128-sha2_512-prfsha512-ecp256!
+
+    left=%any
+    leftauth=pubkey
+    leftid=104.198.151.116
+    leftcert=server.cert.pem
+    leftsendcert=always
+    leftsubnet=0.0.0.0/0,::/0
+
+    right=%any
+    rightauth=eap-mschapv2
+    rightsourceip=10.19.48.0/24,fd9d:bc11:4020::/48
+    rightdns=8.8.8.8,8.8.4.4
+
+conn ikev2-pubkey
+    auto=add
+
+Please replace  104.198.151.116 with your own external IP.
+
+Config ipsec secrets:
+
+errong_leng@freevpn:~$ sudo cat /etc/ipsec.secrets
+# This file holds shared secrets or RSA private keys for authentication.
+
+# RSA private key for this host, authenticating it to any other host
+# which knows the public part.
+: RSA server.key.pem
+: PSK "ucLinux1!"
+lengerrong : XAUTH "ucLinux1!"
+lengerrong : EAP "ucLinux1!"    
+
+please replace "ucLinux1!" with your own password.
+lengerrong is the username, you can replace it too and add more EAP user/password
+using same format like it.
+
+
+Config iptables:
+sudo iptables -A INPUT -p udp --dport 500 -j ACCEPT
+sudo iptables -A INPUT -p udp --dport 4500 -j ACCEPT
+sudo iptables -t nat -A POSTROUTING -s 10.19.48.0/24 -o ens4 -j MASQUERADE
+sudo iptables -A FORWARD -s 10.19.48.0/24 -j ACCEPT
+sudo iptables -A FORWARD -s 10.19.48.0/24 -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss 1316
+-A FORWARD -s 10.19.48.0/24 -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss 1316
+Please replace  ens4 with your own internet interface( check it via ifconfig )
+
+Enable ip forwarding:
+sudo vim /etc/sysctl.conf
+net.ipv4.ip_forward=1
+net.ipv4.conf.all.forwarding=1
+net.ipv6.conf.all.forwarding=1
+fs.suid_dumpable=0
+net.ipv4.conf.all.accept_source_route=0
+net.ipv4.conf.default.accept_source_route=0
+net.ipv4.conf.all.accept_redirects=0
+net.ipv4.conf.default.accept_redirects=0
+net.ipv4.conf.all.secure_redirects=0
+net.ipv4.conf.default.secure_redirects=0
+net.ipv4.icmp_ignore_bogus_error_responses=1
+net.ipv4.conf.all.rp_filter=1
+net.ipv4.conf.default.rp_filter=1
+net.ipv4.conf.all.send_redirects=0
+sudo sysctl -p
+
+
+Restart strongswan:
+sudo service strongswan restart
+
+You can check ipsec status:
+errong_leng@freevpn:~$ sudo ipsec status
+Security Associations (1 up, 0 connecting):
+ikev2-pubkey[8]: ESTABLISHED 50 minutes ago, 10.128.0.3[104.198.151.116]...117.136.66.142[lengerrong]
+ikev2-pubkey{6}:  INSTALLED, TUNNEL, reqid 4, ESP in UDP SPIs: c0b3c907_i 64cfa142_o
+ikev2-pubkey{6}:   0.0.0.0/0 ::/0 === 10.19.48.1/32 fd9d:bc11:4020::1/128
+COMMIT
