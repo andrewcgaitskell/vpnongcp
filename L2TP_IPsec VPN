@@ -16,6 +16,28 @@ sudo apt install iptables-persistent
 
 sudo nano /etc/ipsec.conf
 
+==============
+
+conn L2TP-PSK
+     authby=secret
+     pfs=no
+     auto=add
+     keyingtries=3
+     dpddelay=30
+     dpdtimeout=120
+     dpdaction=clear
+     rekey=yes
+     ikelifetime=8h
+     keylife=1h
+     type=transport
+     left=10.154.0.7  ## 192.168.0.123           # Replace with your local IP address (private, behind NAT IP is okay as well)
+     leftprotoport=17/1701
+     right=35.214.119.159 ##  68.68.32.79            # Replace with your VPN server's IP
+     rightprotoport=17/1701
+
+==============
+
+
 config setup
 nat_traversal=yes
 virtual_private=%v4:10.0.0.0/8,%v4:192.168.0.0/16,%v4:172.16.0.0/12
@@ -31,6 +53,8 @@ ikelifetime=8h
 keylife=1h
 type=transport
 left=
+
+sudo nano /etc/xl2tpd/xl2tpd.conf
 
 [lns default]
 ip range = 10.154.0.50-10.154.0.255
