@@ -1,0 +1,80 @@
+starting point https://wiki.gentoo.org/wiki/IPsec_L2TP_VPN_server
+
+Assumptions and example settings
+For the purpose of this guide, the following assumptions (or sample settings) are used:
+
+Domain is example.com
+Server name is vpn.example.com
+CA file is called ca.crt
+Server cert is vpn.example.com.crt
+Server key is vpn.example.com.key
+Client cert is client.example.com.crt
+Client key is client.example.com.key
+
+the client is called the initiator and the server is called the responder
+
+Option 3: strongSwan
+strongSwan is a fork of FreeS/WAN (although much code has been replaced).
+
+As of strongSwan 5.0, NAT traversal is automatic, no configuration is needed.
+
+strongSwan does not create an ipsec.secrets file, thus one must be created:
+
+root #touch /etc/ipsec.secrets && chmod 664 /etc/ipsec.secrets
+PSK setup for strongSwan
+A shared key must be created. It may either be specified by a quoted string or by a hex number. In the next example, PUT_VPN_SERVER_IP should be replaced by the server's IP address. The %any means that any client selector can authenticate using the given PSK.
+
+FILE /etc/ipsec.secrets
+PUT_VPN_SERVER_IP %any : PSK 0x87839cfdab5f74bc211de156d2902d128bec3243
+# Or to use a plain text PSK instead of hex code:
+# PUT_VPN_SERVER_IP %any : PSK "password_pass"
+Next edit /etc/ipsec.conf as follows:
+
+FILE /etc/ipsec.conf
+conn vpnserver
+        type=transport
+        authby=secret
+        pfs=no
+        rekey=no
+        keyingtries=1
+        left=%any
+        leftprotoport=udp/l2tp
+        leftid=@vpn.example.com
+        right=%any
+        rightprotoport=udp/%any
+        auto=add
+When both left and right are set to %any, then strongSwan assumes the local machine is left.
+
+Certificate based setup for strongSwan
+The certificates and keys must be copied to the appropriate directories:
+
+root #cp ca.crt /etc/ipsec.d/cacerts
+root #cp vpn.example.com.crt /etc/ipsec.d/certs
+root #cp vpn.example.com.key /etc/ipsec.d/private
+root #chown -R ipsec: /etc/ipsec.d
+Next, tell strongSwan to use public keys for the authentication:
+
+FILE /etc/ipsec.secrets
+: RSA vpn.example.com.key
+Finally update the /etc/ipsec.conf file as follows:
+
+FILE /etc/ipsec.conf
+conn vpnserver
+        type=transport
+        authby=rsasig
+        pfs=no
+        rekey=no
+        keyingtries=1
+        left=%defaultroute
+        leftprotoport=udp/l2tp
+        leftcert=server.crt
+        leftid=@vpn.example.com
+        right=%any
+        rightprotoport=udp/%any
+        rightrsasigkey=%cert
+        auto=add
+As before, when both left and right are %any, strongSwan assumes the local machine is left.
+
+Troubleshooting strongSwan
+IPsec pass-through / broken NAT
+In previous strongSwan versions, IPsec pass-through does not seem to work. It returns "cannot respond to IPsec SA request because no connection is known" or (which heavy editing of the config file) an INVALID_HASH_INFORMATION error. This may not be true anymore with strongSwan 5.0 or higher.
