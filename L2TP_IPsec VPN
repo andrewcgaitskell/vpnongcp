@@ -1,0 +1,82 @@
+https://www.elastichosts.co.uk/blog/linux-l2tpipsec-vpn-server/
+
+gcp vm instance
+debian 10
+fixed ip standard
+allow port forwarding
+
+sudo apt update
+sudo apt upgrade
+
+sudo apt install strongswan strongswan-pki
+
+sudo apt install xl2tpd
+
+sudo apt install iptables-persistent
+
+sudo nano /etc/ipsec.conf
+
+config setup
+nat_traversal=yes
+virtual_private=%v4:10.0.0.0/8,%v4:192.168.0.0/16,%v4:172.16.0.0/12
+oe=off
+protostack=netkey
+conn L2TP-PSK
+authby=secret
+pfs=no
+auto=add
+keyingtries=3
+rekey=yes
+ikelifetime=8h
+keylife=1h
+type=transport
+left=
+
+[lns default]
+ip range = 10.154.0.50-10.154.0.255
+local ip = 10.154.0.7 ### local ip of server
+refuse chap = yes
+refuse pap = yes
+require authentication = yes
+name=jag1swl-vpn-server ### name of server
+ppp debug = yes
+pppoptfile = /etc/ppp/options.xl2tpd
+length bit = yes
+
+
+sudo nano /etc/ppp/options.xl2tpd
+
+require-mschap-v2
+ms-dns 8.8.8.8
+ms-dns 4.2.2.1
+ms-dns 8.8.4.4
+proxyarp
+asyncmap 0
+auth
+crtscts
+lock
+hide-password
+modem
+debug
+
+sudo nano /etc/ppp/chap-secrets
+
+# Secrets for authentication using CHAP
+# client        server                           secret                       IP addresses
+*               jag1swl-vpn-server               chap-secret-1234             *
+
+sudo iptables -t nat -A POSTROUTING -o ens4 -s 10.154.0.0/24 -j MASQUERADE
+
+could not save
+
+sudo iptables-save > /etc/iptables/rules.v4
+-bash: /etc/iptables/rules.v4: Permission denied
+
+sudo nano /etc/iptables/rules.v4
+
+*nat
+-A POSTROUTING -o ens4 -s 10.154.0.0/24 -j MASQUERADE
+COMMIT
+
+sudo /etc/init.d/ipsec start
+sudo /etc/init.d/xl2tpd start
