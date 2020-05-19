@@ -26,6 +26,11 @@ PUBLIC_IP=YOUR_PUBLIC_IP
 # start with the basic and install openswan
 apt-get install -y openswan xl2tpd
 
+checking logs
+
+tail -f /var/log/auth.log
+tail -f /var/log/syslog
+
 cat > /etc/ipsec.conf <<EOF
 version 2.0
 config setup
