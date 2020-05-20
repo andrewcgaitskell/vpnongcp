@@ -1,5 +1,20 @@
 https://gist.github.com/greenido/b9c11fdb7dd3b0d2093c
 
+gcp vm instance
+debian 10
+fixed ip standard
+allow port forwarding
+
+sudo apt update
+sudo apt upgrade
+
+sudo apt install strongswan strongswan-pki
+
+sudo apt install xl2tpd
+
+sudo apt install iptables-persistent
+
+
 #!/bin/sh
 #
 # Automatic configuration of a VPN on GCE debian-7-wheezy server. 
