@@ -2,6 +2,7 @@ https://gist.github.com/greenido/b9c11fdb7dd3b0d2093c
 
 list all users : cat /etc/passwd
 
+vm4
 
 gcp vm instance
 debian 10
@@ -11,7 +12,10 @@ allow port forwarding
 sudo apt update
 sudo apt upgrade
 
-sudo apt install strongswan strongswan-pki
+
+sudo apt install strongswan
+
+##strongswan-pki
 
 sudo apt install xl2tpd
 
