@@ -4,6 +4,7 @@ gcp vm instance
 debian 10
 fixed ip standard
 allow port forwarding
+http and https
 
 sudo apt update
 sudo apt upgrade
