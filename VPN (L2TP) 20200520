@@ -1,5 +1,8 @@
 https://gist.github.com/greenido/b9c11fdb7dd3b0d2093c
 
+list all users : cat /etc/passwd
+
+
 gcp vm instance
 debian 10
 fixed ip standard
@@ -14,6 +17,19 @@ sudo apt install xl2tpd
 
 sudo apt install iptables-persistent
 
+sudo nano ipsec.conf
+
+add:
+config setup
+   charondebug="cfg 2"
+
+https://askubuntu.com/questions/847617/dev-ppp-cant-be-opened
+
+https://manpages.debian.org/testing/strongswan-starter/ipsec.conf.5.en.html
+
+https://wiki.strongswan.org/projects/strongswan/wiki/UsableExamples
+
+https://www.interserver.net/forum/threads/pptp-vpn-server-on-ubuntu-12-open-vz.948/
 
 #!/bin/sh
 #
